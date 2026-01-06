@@ -10,5 +10,6 @@
 
 #define MAX_INPUT 1024
 #define MAX_ARGS 1024
+#define MAX_CWD 1024
 
 #endif
