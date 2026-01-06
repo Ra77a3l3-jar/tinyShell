@@ -12,7 +12,7 @@ char *read_input() {
 
     printf(BLUE "tShell" GREEN " > " RESET);
     fflush(stdout);
-    if(!fgets(input, sizeof(input), stdin)) {
+    if(!fgets(input, MAX_INPUT, stdin)) {
         free(input);
         return NULL;
     }

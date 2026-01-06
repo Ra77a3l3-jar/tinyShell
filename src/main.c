@@ -11,10 +11,28 @@ int main(void) {
 
         input = read_input();        
 
+        if(!input) continue;
+
+        if(input[0] == '\0') {
+            free(input);
+            continue;
+        }
+
         char **argv;
         int argc = 0;
 
         argv = parse_input(input, &argc);
+
+        if(!argv) {
+            free(input);
+            continue;
+        }
+
+        if(!argv[0]) {
+            free_argv(argv, argc);
+            free(input);
+            continue;
+        }
 
         if(is_builtin(argv[0])) {
             run_builtin(argv);

@@ -4,13 +4,15 @@
 #include <string.h>
 
 char **parse_input(char *input, int *argc) {
+    if(!argc) return NULL;
+
     char **argv = malloc(sizeof(char *) * MAX_ARGS);
     if(!argv) return NULL;
 
     *argc = 0;
     char *tokenStatus = NULL;
 
-    char *token = strtok_r(input, " ", &tokenStatus);
+    char *token = strtok_r(input, " \n", &tokenStatus);
     while(token && *argc < MAX_ARGS - 1) {
         argv[*argc] = strdup(token);
         if(!argv[*argc]) {
@@ -22,7 +24,7 @@ char **parse_input(char *input, int *argc) {
         }
         
         (*argc)++;
-        token = strtok_r(NULL, " ", &tokenStatus);
+        token = strtok_r(NULL, " \n", &tokenStatus);
     }
     
     argv[*argc] = NULL;
