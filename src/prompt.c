@@ -33,7 +33,7 @@ char *read_input() {
         trim_newline(branch);
         printf(RED "@%s " GREEN "➜ " BLUE "%s " YELLOW "git(" PURPLE "%s" YELLOW ") " RESET, user, folder, branch);
     } else {
-        printf(RED "@%s " GREEN "➜ " BLUE "%s : " RESET, user, folder);
+        printf(RED "@%s " GREEN "➜ " BLUE "%s " RESET, user, folder);
     }
     free(branch);
 

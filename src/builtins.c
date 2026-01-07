@@ -9,7 +9,9 @@ int is_builtin(const char *cmd) {
 
     return (
         strcmp(cmd, "cd") == 0 ||
-        strcmp(cmd, "exit") == 0
+        strcmp(cmd, "exit") == 0 ||
+        strcmp(cmd, "pwd") == 0 ||
+        strcmp(cmd, "echo") == 0
     );
 } 
 
@@ -19,10 +21,14 @@ int run_builtin(char **argv) {
     if(strcmp(argv[0], "exit") == 0) {
         builtin_exit(argv);
         return 0;
-    }
-
-    if(strcmp(argv[0], "cd") == 0) {
+    } else if(strcmp(argv[0], "cd") == 0) {
         builtin_cd(argv);
+        return 0;
+    } else if(strcmp(argv[0], "pwd") == 0) {
+        builtin_pwd();
+        return 0;
+    } else if(strcmp(argv[0], "echo") == 0) {
+        builtin_echo(argv);
         return 0;
     }
     return 0;
@@ -55,4 +61,25 @@ static void builtin_exit(char **argv) {
     }
 
     exit(status);
+}
+
+static void builtin_pwd() {
+
+    char cwd[MAX_CWD];
+    
+    if(!getcwd(cwd, MAX_CWD)) {
+        perror("pwd");
+        return;
+    }
+
+    printf("%s\n", cwd);
+}
+
+static void builtin_echo(char **argv) {
+    for (int i = 1; argv[i]; i++) {
+        printf("%s", argv[i]);
+        if (argv[i + 1])
+            printf(" ");
+    }
+    printf("\n");
 }
