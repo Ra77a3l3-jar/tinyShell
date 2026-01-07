@@ -1,6 +1,7 @@
 #include "../include/prompt.h"
 #include "../include/shell.h"
 #include "../include/utils.h"
+#include "../include/git.h"
 #include <stdio.h>
 #include <pwd.h>
 #include <limits.h>
@@ -26,14 +27,24 @@ char *read_input() {
 
     char *folder = (last_slash) ? last_slash + 1 : cwd;
 
-    printf(RED "@%s " GREEN "➜ " BLUE "%s : " RESET, user, folder);
+    char *branch = get_branch();
+
+    if(branch) {
+        trim_newline(branch);
+        printf(RED "@%s " GREEN "➜ " BLUE "%s " YELLOW "git(" PURPLE "%s" YELLOW ") " RESET, user, folder, branch);
+    } else {
+        printf(RED "@%s " GREEN "➜ " BLUE "%s : " RESET, user, folder);
+    }
+    free(branch);
 
     fflush(stdout);
     if(!fgets(input, MAX_INPUT, stdin)) {
         free(input);
+        free(cwd);
         return NULL;
     }
 
     trim_newline(input);
+    free(cwd);
     return input;
 }
