@@ -1,7 +1,5 @@
 #include "../include/prompt.h"
-#include "../include/parser.h"
 #include "../include/execute.h"
-#include "../include/builtins.h"
 #include "../include/pipe.h"
 #include <stdlib.h>
 #include <string.h>
@@ -28,6 +26,7 @@ int main(void) {
         for(int i = 0; i < num_cmds; i++) {
             free(cmds[i]);
         }
+
         free(cmds);
         free(input);
     }

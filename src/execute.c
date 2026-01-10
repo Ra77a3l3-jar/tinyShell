@@ -42,7 +42,7 @@ void execute_external(char **cmds, int *num_cmds) {
         int num_pipes = *num_cmds - 1;
         int pipes[num_pipes][2];
 
-        // Creating all the pipes
+        //Creating all the pipes
         for(int i = 0; i < num_pipes; i++) {
             if(pipe(pipes[i]) == -1) {
                 perror("pipe");
@@ -50,10 +50,9 @@ void execute_external(char **cmds, int *num_cmds) {
             }
         }
 
-        // Fork child for each command
+        // Fork child for each comand
         for(int i = 0; i < *num_cmds; i++) {
             int argc = 0;
-
             char **argv = parse_input(cmds[i], &argc);
 
             if(!argv || !argv[0]) {
@@ -81,22 +80,24 @@ void execute_external(char **cmds, int *num_cmds) {
                 exit(1);
             }
 
-            if(pid == 0) { // Child process for comand i
-                // If not first command read from previus pipe
+            // Child process for command i
+            if(pid == 0) {
+
+                // If not first comand read from last pipe
                 if(i > 0) {
                     dup2(pipes[i - 1][0], STDIN_FILENO);
-                    close(pipes[i - 1][0]);
-                    close(pipes[i - 1][1]);
+                    close(pipes[i][0]);
+                    close(pipes[i][1]);
                 }
 
-                // If not last command write to the current pipe
+                // If not last command write to current pipe
                 if(i < *num_cmds - 1) {
                     dup2(pipes[i][1], STDOUT_FILENO);
                     close(pipes[i][0]);
                     close(pipes[i][1]);
                 }
 
-                // Close all unused pipes
+                // Close unused pipes
                 for(int j = 0; j < num_pipes; j++) {
                     if((i == 0 || j != i) && (i == *num_cmds - 1 || j != i)) {
                         close(pipes[j][0]);
@@ -112,20 +113,20 @@ void execute_external(char **cmds, int *num_cmds) {
                 execvp(argv[0], argv);
                 perror("execvp");
                 exit(1);
+            } else if(pid > 0) {
+                // Parent closes all pipes and waits
+                for(int i = 0; i < num_pipes; i++) {
+                    close(pipes[i][0]);
+                    close(pipes[i][1]);
+                }
+
+                for(int i = 0; i < *num_cmds; i++) {
+                    wait(NULL);
+                }
             }
+            free(argv);
         }
-
-        // Parent closes all the pipes and waits
-        for(int i = 0; i < num_pipes; i++) {
-            close(pipes[i][0]);
-            close(pipes[i][1]);
-        }
-
-        for(int i = 0; i < *num_cmds; i++) {
-            wait(NULL);
-        }
-        
-        free(cmds);
     }
+    free(cmds);
 }
  
