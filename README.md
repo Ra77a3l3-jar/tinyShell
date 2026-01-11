@@ -45,7 +45,8 @@ pid_t pid = fork();
 ```
 
 #### `execvp()` - Execute a Program
-Replaces the current child process with a new program. This is how external commands like `ls`, `cat`, `gcc` are run.
+Replaces the current child process with a new program.
+This is how external commands like `ls`, `cat`, `gcc` are run.
 
 ```c
 execvp(argv[0], argv);
@@ -55,10 +56,35 @@ exit(1);
 ```
 
 #### `wait()` - Wait for Child Process
-Makes the parent process wait until the child process finishes. This prevents the prompt from showing up before your command completes.
+Makes the parent process wait until the child process finishes.
+This prevents the prompt from showing up before your command completes.
 
 ```c
 wait(NULL);
+```
+
+#### `pipe()` - Create a Pipe
+Creates a pipe, which is like a queue for inter-process communication. A pipe has two ends:
+- **Write End**: Where one process writes its output (stdout)
+- **Read End**: Where the next process reads what the previous process wrote
+
+```c
+int pipefd[2];
+pipe(pipefd);
+```
+
+#### `dup2()` - Duplicate File Descriptor
+Redirects input/output by copying one file descriptor to another. Used to redirect a process's stdin or stdout to a pipe.
+
+```c
+dup2(pipefd[1], STDOUT_FILENO);
+```
+
+#### `close()` - Close File Descriptor
+Closes a file descriptor (like a pipe end) when it's no longer needed. This is important to signal end-of-data in pipes.
+
+```c
+close(pipefd[0]);
 ```
 
 ### Built-in Commands
@@ -80,6 +106,36 @@ For commands that aren't built-in (like `ls`, `cat`, `echo`), the shell:
 1. Creates a new process with `fork()`
 2. In the child process, runs `execvp()` to execute the command
 3. In the parent process, waits with `wait()` for the child to finish
+
+### Pipes
+
+Pipes allow you to chain commands together by connecting the output of one command to the input of another.
+
+Example: `ls -la | grep txt | wc -l`
+
+#### How Pipes Work
+
+A pipe acts like a queue with two ends:
+- **Write End**: One process writes its stdout here
+- **Read End**: The next process reads from here as its stdin
+
+When you use the `|` operator, the shell:
+
+1. Creates pipes for inter-process communication using `pipe()`
+2. The parent process creates multiple child processes (one for each command)
+3. Each child process runs concurrently
+4. Uses `dup2()` to redirect:
+   - The first command's stdout to the pipe's write end
+   - The next command's stdin to the pipe's read end
+5. Closes unused pipe ends with `close()` to prevent deadlocks
+6. Each child executes its command with `execvp()`
+7. The parent waits for all children to finish
+
+#### Process Model
+
+The shell uses a single parent process that spawns multiple child processes.
+These child processes run concurrently, with data flowing through pipes from one to the next.
+The parent process manages all children and waits for them to complete.
 
 ### Input Parsing
 
@@ -120,6 +176,10 @@ file1.txt  file2.txt  projects
 
 @raffaele ➜ projects : pwd
 /home/raffaele/Documents/projects
+
+@raffaele ➜ projects : ls -la | grep txt
+-rw-r--r-- 1 raffaele raffaele  1234 Jan 10 10:30 notes.txt
+-rw-r--r-- 1 raffaele raffaele  5678 Jan 10 11:45 readme.txt
 
 @raffaele ➜ projects : exit
 ```
