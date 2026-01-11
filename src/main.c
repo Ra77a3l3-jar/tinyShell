@@ -23,11 +23,6 @@ int main(void) {
 
         execute_external(cmds, &num_cmds);
 
-        for(int i = 0; i < num_cmds; i++) {
-            free(cmds[i]);
-        }
-
-        free(cmds);
         free(input);
     }
 }
