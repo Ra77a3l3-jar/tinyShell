@@ -1,10 +1,14 @@
 #include "../include/prompt.h"
 #include "../include/execute.h"
 #include "../include/pipe.h"
+#include "../include/utils.h"
 #include <stdlib.h>
 #include <string.h>
+#include <signal.h>
 
 int main(void) {
+
+    signal(SIGINT, sigint_handle);
 
     while(1) {
         char *input = NULL;

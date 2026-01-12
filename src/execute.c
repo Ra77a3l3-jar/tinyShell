@@ -41,6 +41,8 @@ void execute_external(char **cmds, int *num_cmds) {
         pid_t pid = fork();
 
         if(pid == 0) {
+            signal(SIGINT, SIG_DFL);
+            
             execvp(argv[0], argv);
             perror("execvp");
             exit(1);
@@ -133,6 +135,8 @@ void execute_external(char **cmds, int *num_cmds) {
                     run_builtin(argv);
                     exit(0);
                 }
+
+                signal(SIGINT, SIG_DFL);
 
                 execvp(argv[0], argv);
                 perror("execvp");
