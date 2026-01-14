@@ -11,7 +11,9 @@ int is_builtin(const char *cmd) {
         strcmp(cmd, "cd") == 0 ||
         strcmp(cmd, "exit") == 0 ||
         strcmp(cmd, "pwd") == 0 ||
-        strcmp(cmd, "echo") == 0
+        strcmp(cmd, "echo") == 0 ||
+        strcmp(cmd, "export") == 0 ||
+        strcmp(cmd, "unset") == 0
     );
 } 
 
@@ -29,6 +31,12 @@ int run_builtin(char **argv) {
         return 0;
     } else if(strcmp(argv[0], "echo") == 0) {
         builtin_echo(argv);
+        return 0;
+    } else if(strcmp(argv[0], "export") == 0) {
+        builtin_export(argv);
+        return 0;
+    } else if(strcmp(argv[0], "unset") == 0) {
+        builtin_unset(argv);
         return 0;
     }
     return 0;
@@ -82,4 +90,23 @@ static void builtin_echo(char **argv) {
             printf(" ");
     }
     printf("\n");
+}
+
+static void builtin_export(char **argv) {
+
+    char *var_val = strchr(argv[1], '=');
+    if(!var_val) return;
+
+    *var_val = '\0';
+    if(setenv(argv[1], var_val + 1, 1) == -1) {
+        printf(" Error: could not set the enviormental variable.\n");
+    }
+}
+
+static void builtin_unset(char **argv) {
+    if(!argv[1]) return;
+
+    if(unsetenv(argv[1]) == -1) {
+        printf(" Error: could not unset the enviormental variable.\n");
+    }
 }

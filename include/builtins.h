@@ -21,4 +21,10 @@ static void builtin_pwd();
 // Prints arguments to stdout followed by a newline
 static void builtin_echo(char **argv);
 
+// Sets enviormetal variables
+static void builtin_export(char **argv);
+
+// Removes an enviormental variable
+static void builtin_unset(char **argv);
+
 #endif
