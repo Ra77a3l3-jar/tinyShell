@@ -98,7 +98,7 @@ static void builtin_export(char **argv) {
     if(!var_val) return;
 
     *var_val = '\0';
-    if(setenv(argv[1], var_val + 1, 1) == -1) {
+    if(setenv(argv[1], var_val + 1, 1) == -1) { // The third argument in setenv allows to decide if the var can be ovewritten or not 1(yes) 0(no)
         printf(" Error: could not set the enviormental variable.\n");
     }
 }
