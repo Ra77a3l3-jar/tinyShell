@@ -87,6 +87,38 @@ Closes a file descriptor (like a pipe end) when it's no longer needed. This is i
 close(pipefd[0]);
 ```
 
+#### `signal()` - Signal Handling
+Manages how the shell responds to signals like Ctrl+C (SIGINT). Used to prevent the shell from exiting when you press Ctrl+C.
+
+```c
+signal(SIGINT, SIG_IGN);  // Ignore SIGINT in parent
+signal(SIGINT, SIG_DFL);  // Default behavior in child
+```
+
+#### `setenv()` - Set Environment Variable
+Creates or updates an environment variable.
+The third argument controls whether the variable can be overwritten:
+non-zero allows overwriting, 0 prevents overwriting if the variable already exists.
+
+```c
+setenv("VAR", "value", 1);  // 1 = allow overwrite
+setenv("VAR", "value", 0);  // 0 = don't overwrite if exists
+```
+
+#### `unsetenv()` - Remove Environment Variable
+Deletes an environment variable from the environment.
+
+```c
+unsetenv("VAR");
+```
+
+#### `getenv()` - Get Environment Variable
+Retrieves the value of an environment variable.
+
+```c
+char *value = getenv("HOME");
+```
+
 ### Built-in Commands
 
 Some commands are built directly into the shell instead of being external programs:
@@ -98,6 +130,23 @@ Some commands are built directly into the shell instead of being external progra
 **`exit [status]`**
 - Exits the shell with an optional status code
 - Uses `exit()` system call
+
+**`pwd`**
+- Prints the current working directory
+- Uses `getcwd()` to get the full path
+
+**`echo [args...]`**
+- Prints arguments to stdout
+- Supports environment variables like `echo $HOME`
+
+**`export VAR=value`**
+- Sets an environment variable
+- Uses `setenv()` to create or update variables
+- Variables persist for the shell session
+
+**`unset VAR`**
+- Removes an environment variable
+- Uses `unsetenv()` to delete the variable
 
 ### External Commands
 
@@ -137,6 +186,21 @@ The shell uses a single parent process that spawns multiple child processes.
 These child processes run concurrently, with data flowing through pipes from one to the next.
 The parent process manages all children and waits for them to complete.
 
+### Signal Handling
+
+The shell handles signals to improve user experience:
+
+**Ctrl+C (SIGINT)**: The parent shell process ignores SIGINT using `signal(SIGINT, SIG_IGN)`,
+so pressing Ctrl+C won't exit the shell.
+However, child processes use default signal handling with `signal(SIGINT, SIG_DFL)`,
+allowing you to stop running commands without killing the shell.
+
+**How it works**:
+1. When you press Ctrl+C, the kernel sends SIGINT to all processes in the foreground process group
+2. The shell ignores it and stays running
+3. Child processes receive it and terminate normally
+4. The parent cleans up and shows the prompt again
+
 ### Input Parsing
 
 The shell uses `strtok_r()` to split your input into separate words (tokens):
@@ -144,15 +208,30 @@ The shell uses `strtok_r()` to split your input into separate words (tokens):
 - First token is the command
 - Rest are arguments
 - Stores everything in an array that ends with `NULL`
+- Handles environment variable expansion (e.g., `$HOME` gets replaced with its value)
 
 Example: `ls -la /home` becomes `["ls", "-la", "/home", NULL]`
+
+#### Environment Variable Expansion
+
+When you type something like `echo $HOME`, the shell:
+1. Detects the `$` prefix in the token
+2. Uses `getenv()` to look up the variable's value
+3. Replaces the token with the actual value
+4. If the variable doesn't exist, it's replaced with an empty string
 
 ### Prompt Display
 
 The prompt shows:
 - Your username (using `getpwuid()` and `getuid()`)
 - Current folder name (extracted from `getcwd()`)
+- Git branch name (if in a git repository)
 - Colors using ANSI escape codes
+
+The git branch detection works by:
+1. Running `git rev-parse --abbrev-ref HEAD` using `popen()`
+2. Reading the output to get the current branch name
+3. Displaying it in the prompt if successful
 
 ## Build
 
@@ -169,17 +248,27 @@ make release
 ## Example Usage
 
 ```bash
-@raffaele ➜ Documents : ls
+@raffaele ➜ Documents  ls
 file1.txt  file2.txt  projects
 
-@raffaele ➜ Documents : cd projects
+@raffaele ➜ Documents  cd projects
 
-@raffaele ➜ projects : pwd
+@raffaele ➜ projects git(main)  pwd
 /home/raffaele/Documents/projects
 
-@raffaele ➜ projects : ls -la | grep txt
+@raffaele ➜ projects git(main)  echo $HOME
+/home/raffaele
+
+@raffaele ➜ projects git(main)  export MY_VAR=hello
+
+@raffaele ➜ projects git(main)  echo $MY_VAR
+hello
+
+@raffaele ➜ projects git(main)  ls -la | grep txt
 -rw-r--r-- 1 raffaele raffaele  1234 Jan 10 10:30 notes.txt
 -rw-r--r-- 1 raffaele raffaele  5678 Jan 10 11:45 readme.txt
 
-@raffaele ➜ projects : exit
+@raffaele ➜ projects git(main)  unset MY_VAR
+
+@raffaele ➜ projects git(main)  exit
 ```
