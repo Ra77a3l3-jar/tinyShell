@@ -29,6 +29,8 @@ int main(void) {
         char *env_var = extract_variable_env(input);
         if(env_var) {
             new_input = switch_name_value(input, env_var);
+        } else {
+            new_input = strdup(input);
         }
 
         if(!new_input) continue;
