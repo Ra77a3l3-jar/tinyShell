@@ -209,8 +209,21 @@ The shell uses `strtok_r()` to split your input into separate words (tokens):
 - Rest are arguments
 - Stores everything in an array that ends with `NULL`
 - Handles environment variable expansion (e.g., `$HOME` gets replaced with its value)
+- Supports command chaining with `;` to execute multiple commands sequentially
 
 Example: `ls -la /home` becomes `["ls", "-la", "/home", NULL]`
+
+#### Command Chaining with `;`
+
+You can run multiple commands in sequence by separating them with semicolons.
+
+Example: `cd /home; ls; pwd`
+
+When you use the `;` operator, the shell:
+1. Splits the input by `;` using `strtok_r()`
+2. Executes each command one after another
+3. Each command runs independently - if one fails, the next still runs
+4. All commands execute in the same shell session, so changes (like `cd`) persist
 
 #### Environment Variable Expansion
 
@@ -267,6 +280,10 @@ hello
 @raffaele ➜ projects git(main)  ls -la | grep txt
 -rw-r--r-- 1 raffaele raffaele  1234 Jan 10 10:30 notes.txt
 -rw-r--r-- 1 raffaele raffaele  5678 Jan 10 11:45 readme.txt
+
+@raffaele ➜ projects git(main)  cd /home; pwd; echo $USER
+/home
+raffaele
 
 @raffaele ➜ projects git(main)  unset MY_VAR
 
