@@ -2,6 +2,7 @@
 #include "../include/execute.h"
 #include "../include/pipe.h"
 #include "../include/utils.h"
+#include "../include/parser.h"
 #include <stdlib.h>
 #include <string.h>
 #include <signal.h>
@@ -22,9 +23,7 @@ int main(void) {
             continue;
         }
 
-
         char *new_input = NULL;
-        // TODO check if the dollars is there and check if the env value is not null if null just continue like normal
 
         char *env_var = extract_variable_env(input);
         if(env_var) {
@@ -35,10 +34,16 @@ int main(void) {
 
         if(!new_input) continue;
 
-        int num_cmds = 0;
-        char **cmds = split_pipes(new_input, &num_cmds);
+        int num_splits = 0;
+        char **semi_cmds = split_semicolon(new_input, &num_splits);
 
-        execute_external(cmds, &num_cmds);
+        
+        for(int i = 0; i < num_splits; i++) {
+            int num_cmds = 0;
+            char **cmds = split_pipes(semi_cmds[i], &num_cmds);
+            
+            execute_external(cmds, &num_cmds);
+        }
 
         free(input);
         free(new_input);
