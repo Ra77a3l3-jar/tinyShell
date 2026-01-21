@@ -3,6 +3,8 @@
 
 #define MAX_CWD 1024
 
+#include "../include/history.h"
+
 // Returns 1 if cmd is a builtin, 0 otherwise
 int is_builtin(const char *cmd);
 
@@ -26,5 +28,8 @@ static void builtin_export(char **argv);
 
 // Removes an enviormental variable
 static void builtin_unset(char **argv);
+
+// Prints the entire shell history
+static void builtin_history(History *h);
 
 #endif

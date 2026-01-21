@@ -1,4 +1,5 @@
 #include "../include/builtins.h"
+#include <stddef.h>
 #include <string.h>
 #include <stdlib.h>
 #include <stdio.h>
@@ -13,7 +14,8 @@ int is_builtin(const char *cmd) {
         strcmp(cmd, "pwd") == 0 ||
         strcmp(cmd, "echo") == 0 ||
         strcmp(cmd, "export") == 0 ||
-        strcmp(cmd, "unset") == 0
+        strcmp(cmd, "unset") == 0 ||
+        strcmp(cmd, "history") == 0
     );
 } 
 
@@ -37,6 +39,9 @@ int run_builtin(char **argv) {
         return 0;
     } else if(strcmp(argv[0], "unset") == 0) {
         builtin_unset(argv);
+        return 0;
+    } else if(strcmp(argv[0], "history") == 0) {
+        builtin_history(argv);
         return 0;
     }
     return 0;
@@ -108,5 +113,14 @@ static void builtin_unset(char **argv) {
 
     if(unsetenv(argv[1]) == -1) {
         printf(" Error: could not unset the enviormental variable.\n");
+    }
+}
+
+static void builtin_history(History *h) {
+    if(h->size == 0) return;
+
+    for(size_t i = 0; i < h->size; i++) {
+        size_t idx = (h->head - h->size + i + h->capacity) % h->capacity;
+        printf("%zu  %s\n", i + 1, h->items[idx]);
     }
 }

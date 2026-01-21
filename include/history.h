@@ -15,7 +15,7 @@ typedef struct {
     char *scratch;
 } History;
 
-void history_init(History *h, size_t capacity);
+History *history_init(size_t capacity);
 void history_add(History *h, const char *cmd);
 
 const char *history_prev(History *h);
