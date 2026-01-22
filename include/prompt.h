@@ -1,6 +1,8 @@
 #ifndef PROMPT_H
 #define PROMPT_H
 
+#include "history.h"
+
 #define RED     "\033[0;31m"
 #define BLUE    "\033[0;34m"
 #define GREEN   "\033[0;32m"
@@ -11,5 +13,9 @@
 // Read input line from user
 // Returns a dynamically allocated string (caller must free)
 char *read_input(void);
+
+// Returns the inputs as a string
+// can use arrow keys to move in the history
+char *read_input_with_history(History *h);
 
 #endif
