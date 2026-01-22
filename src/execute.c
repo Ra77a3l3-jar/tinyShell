@@ -8,8 +8,7 @@
 #include <sys/wait.h>
 #include <unistd.h>
 
-void execute_external(char **cmds, int *num_cmds) {
-
+void execute_external(char **cmds, int *num_cmds, History *h) {
     if(*num_cmds == 1) {
         int argc = 0;
         char **argv = parse_input(cmds[0], &argc);
@@ -26,7 +25,7 @@ void execute_external(char **cmds, int *num_cmds) {
         }
 
         if(is_builtin(argv[0])) {
-            run_builtin(argv);
+            run_builtin(argv, h);
             for(int i = 0; i < argc; i++) {
                 free(argv[i]);
             }
@@ -132,7 +131,7 @@ void execute_external(char **cmds, int *num_cmds) {
                 }
 
                 if(is_builtin(argv[0])) {
-                    run_builtin(argv);
+                    run_builtin(argv, h);
                     exit(0);
                 }
 

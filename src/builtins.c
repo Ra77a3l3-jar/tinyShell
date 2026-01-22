@@ -19,7 +19,7 @@ int is_builtin(const char *cmd) {
     );
 } 
 
-int run_builtin(char **argv) {
+int run_builtin(char **argv, History *h) {
     if(!argv || !argv[0]) return 1;
 
     if(strcmp(argv[0], "exit") == 0) {
@@ -41,7 +41,7 @@ int run_builtin(char **argv) {
         builtin_unset(argv);
         return 0;
     } else if(strcmp(argv[0], "history") == 0) {
-        builtin_history(argv);
+        builtin_history(h);
         return 0;
     }
     return 0;

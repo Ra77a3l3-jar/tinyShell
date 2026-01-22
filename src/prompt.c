@@ -50,7 +50,7 @@ char *read_input() {
 }
 
 char *read_input_with_history(History *h) {
-    char *input = malloc(sizeof(char *) * MAX_INPUT);
+    char *input = malloc(sizeof(char) * MAX_INPUT);
     if(!input) {
         perror("malloc");
         exit(1);
@@ -74,19 +74,20 @@ char *read_input_with_history(History *h) {
     } else {
         printf(RED "@%s " GREEN "➜ " BLUE "%s " RESET, user, folder);
     }
+    fflush(stdout);
     free(branch);
 
-    struct termios old_tio, new_tio;
+    struct termios old_tio, new_tio; // old_tio is the old terminal state
     tcgetattr(STDIN_FILENO, &old_tio);
     new_tio = old_tio;
     new_tio.c_lflag &= ~(ICANON | ECHO);
     tcsetattr(STDIN_FILENO, TCSANOW, &new_tio);
 
     int pos = 0;
-    int in_escape = 0;
+    int in_escape = 0; // ANSI escape sequence for arrow keys
     int escape_seq = 0;
 
-    history_reset_cursor(h);
+    history_reset_cursor(h); // Sets the history for use
 
     while(1) {
         char c;
@@ -100,12 +101,13 @@ char *read_input_with_history(History *h) {
             continue;
         }
 
+        // Escape sequence made of \033[A or B
         if(in_escape) {
             if(escape_seq == 0 && c == '[') {
                 escape_seq = 1;
                 continue;
             } else if(escape_seq == 1) {
-                if(c == 'A') {
+                if(c == 'A') { // Arrow UP
                     if(h->cursor == h->size && pos > 0) {
                         if(h->scratch) free(h->scratch);
                         h->scratch = strndup(input, pos);
@@ -117,21 +119,21 @@ char *read_input_with_history(History *h) {
                             write(STDOUT_FILENO, "\b \b", 3);
                             pos--;
                         }
-                        strcpy(input, prev);
+                        strcpy(input, prev); // Copy history entry to buff
                         pos = strlen(input);
-                        write(STDOUT_FILENO, input, pos);
+                        write(STDOUT_FILENO, input, pos); // Prints new command
                     }
-                } else if(c == 'B') {
+                } else if(c == 'B') { // Arrow BOWN
                     const char *next = history_next(h);
                     while(pos > 0) {
                         write(STDOUT_FILENO, "\b \b", 3);
                         pos--;
                     }
                     if(next) {
-                        strcpy(input, next);
+                        strcpy(input, next); // Copy history entry to buff
                         pos = strlen(input);
                         write(STDOUT_FILENO, input, pos);
-                    } else {
+                    } else { // If new entry does not exist clear input
                         input[0] = '\0';
                         pos = 0;
                     }
@@ -144,16 +146,17 @@ char *read_input_with_history(History *h) {
             escape_seq = 0;
             continue;
         }
-        if(c == 127 || c == 'b') {
+
+        if(c == 127 || c == '\b') {
             if(pos > 0) {
                 pos--;
-                write(STDOUT_FILENO, "\b \b", 3);
+                write(STDOUT_FILENO, "\b \b", 3); // Handle backspace to delete last char
             }
-        } else if(c == '\n') {
+        } else if(c == '\n') { // Handle ENTER key null terminating the string
             input[pos] = '\0';
             write(STDOUT_FILENO, "\n", 1);
-            break;
-        } else if(c >= 32 && c < 127) {
+            break; // Exit loop after enter
+        } else if(c >= 32 && c < 127) { // Normal chars
             if(pos < MAX_INPUT - 1) {
                 input[pos++] = c;
                 write(STDOUT_FILENO, &c, 1);
@@ -161,6 +164,6 @@ char *read_input_with_history(History *h) {
         }
     }
 
-    tcsetattr(STDIN_FILENO, TCSANOW, &old_tio);
+    tcsetattr(STDIN_FILENO, TCSANOW, &old_tio); // Terminal reset to default
     return input;
 }
