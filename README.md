@@ -119,6 +119,17 @@ Retrieves the value of an environment variable.
 char *value = getenv("HOME");
 ```
 
+#### `tcgetattr()` / `tcsetattr()` - Terminal Attribute Control
+Gets and sets terminal attributes, used for raw mode input to handle arrow keys and special characters.
+
+```c
+struct termios old_tio, new_tio;
+tcgetattr(STDIN_FILENO, &old_tio);  // Get current attributes
+new_tio = old_tio;
+new_tio.c_lflag &= ~(ICANON | ECHO);  // Disable canonical mode and echo
+tcsetattr(STDIN_FILENO, TCSANOW, &new_tio);  // Apply new attributes
+```
+
 ### Built-in Commands
 
 Some commands are built directly into the shell instead of being external programs:
@@ -147,6 +158,11 @@ Some commands are built directly into the shell instead of being external progra
 **`unset VAR`**
 - Removes an environment variable
 - Uses `unsetenv()` to delete the variable
+
+**`history`**
+- Displays command history
+- Shows all previously executed commands
+- Each entry is numbered for reference
 
 ### External Commands
 
@@ -246,6 +262,31 @@ The git branch detection works by:
 2. Reading the output to get the current branch name
 3. Displaying it in the prompt if successful
 
+### Command History
+
+The shell maintains a history of previously executed commands:
+- Stores commands in a circular buffer with dynamic growth
+- Navigate through history using arrow keys (up/down)
+- Automatically filters duplicate consecutive commands
+- Access history using the `history` builtin command
+
+#### Raw Mode Terminal Input
+
+To support arrow key navigation, the shell uses raw mode terminal input:
+1. Reads input character by character using `read()`
+2. Detects ANSI escape sequences for arrow keys (`\033[A` for up, `\033[B` for down)
+
+When you press the up arrow:
+1. The shell saves your current input to a scratch buffer (if any)
+2. Retrieves the previous command from history
+3. Clears the current line using backspace sequences (`\b \b`)
+4. Displays the historical command
+
+When you press the down arrow:
+1. The shell moves forward in history
+2. If you reach the end, it restores your original input from the scratch buffer
+3. Otherwise, it displays the next command in history
+
 ## Build
 
 ```bash
@@ -286,6 +327,14 @@ hello
 raffaele
 
 @raffaele ➜ projects git(main)  unset MY_VAR
+
+@raffaele ➜ projects git(main)  history
+1  cd projects
+2  pwd
+3  echo $HOME
+4  export MY_VAR=hello
+5  echo $MY_VAR
+6  ls -la | grep txt
 
 @raffaele ➜ projects git(main)  exit
 ```
